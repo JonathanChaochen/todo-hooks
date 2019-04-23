@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import axios from 'axios';
 const Todo = () => {
   const [todoName, setTodoName] = useState('');
   const [todoList, setTodoList] = useState([]);
@@ -9,6 +9,16 @@ const Todo = () => {
 
   const todoAddHandler = () => {
     setTodoList(todoList.concat(todoName));
+    axios
+      .post('https://react-hooks-5e579.firebaseio.com/todos.json', {
+        name: todoName
+      })
+      .then(res => {
+        console.log(res);
+      })
+      .catch(err => {
+        console.log(err);
+      });
   };
 
   return (
