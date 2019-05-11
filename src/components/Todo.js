@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 const Todo = () => {
   const [todoName, setTodoName] = useState('');
+  const [submittedTodo, setSubmittedTodo] = useState(null);
   const [todoList, setTodoList] = useState([]);
 
   useEffect(
@@ -37,18 +38,29 @@ const Todo = () => {
     };
   }, []);
 
+  useEffect(
+    () => {
+      if (submittedTodo) {
+        setTodoList(todoList.concat(submittedTodo));
+      }
+    },
+    [submittedTodo]
+  );
+
   const inpustChangeHandler = event => {
     setTodoName(event.target.value);
   };
 
   const todoAddHandler = () => {
-    setTodoList(todoList.concat(todoName));
     axios
       .post('https://react-hooks-5e579.firebaseio.com/todos.json', {
         name: todoName
       })
       .then(res => {
-        console.log(res);
+        setTimeout(() => {
+          const todoItem = { id: res.data.name, name: todoName };
+          setSubmittedTodo(todoItem);
+        }, 3000);
       })
       .catch(err => {
         console.log(err);
