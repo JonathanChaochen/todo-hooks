@@ -1,31 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import axios from 'axios';
 const Todo = () => {
   const [todoName, setTodoName] = useState('');
   const [submittedTodo, setSubmittedTodo] = useState(null);
-  const [todoList, setTodoList] = useState([]);
+  // const [todoList, setTodoList] = useState([]);
+  const todoListReducer = (state, action) => {
+    switch (action.type) {
+      case 'ADD':
+        return state.concat(action.payload);
+      case 'SET':
+        return action.payload;
+      case 'REMOVE':
+        return state.filter(todo => todo.id !== action.payload);
+      default:
+        return state;
+    }
+  };
 
-  useEffect(
-    () => {
-      axios
-        .get('https://react-hooks-5e579.firebaseio.com/todos.json')
-        .then(result => {
-          console.log(result);
-          const todoData = result.data;
-          const todos = [];
-          for (const key in todoData) {
-            todos.push({ id: key, name: todoData[key].name });
-          }
-          setTodoList(todos);
-        });
+  const [todoList, dispatch] = useReducer(todoListReducer, []);
 
-      // cleanup
-      return () => {
-        console.log('Cleanup');
-      };
-    },
-    [todoName]
-  );
+  useEffect(() => {
+    axios
+      .get('https://react-hooks-5e579.firebaseio.com/todos.json')
+      .then(result => {
+        const todoData = result.data;
+        const todos = [];
+        for (const key in todoData) {
+          todos.push({ id: key, name: todoData[key].name });
+        }
+        console.log('TCL: Todo -> todos', todos);
+
+        dispatch({ type: 'SET', payload: todos });
+      });
+
+    // cleanup
+    return () => {
+      console.log('Cleanup');
+    };
+  }, []);
 
   const mouseMoveHandler = event => {
     console.log(event.clientX, event.clientY);
@@ -41,7 +53,8 @@ const Todo = () => {
   useEffect(
     () => {
       if (submittedTodo) {
-        setTodoList(todoList.concat(submittedTodo));
+        console.log('TCL: Todo -> submittedTodo', submittedTodo);
+        dispatch({ type: 'ADD', payload: submittedTodo });
       }
     },
     [submittedTodo]
@@ -67,6 +80,17 @@ const Todo = () => {
       });
   };
 
+  const todoRemoveHandler = todoId => {
+    axios
+      .delete(`https://react-hooks-5e579.firebaseio.com/todos/${todoId}.json`)
+      .then(res => {
+        dispatch({ type: 'REMOVE', payload: todoId });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  };
+
   return (
     <React.Fragment>
       <input
@@ -78,7 +102,13 @@ const Todo = () => {
       <button type="button" onClick={todoAddHandler}>
         Add
       </button>
-      <ul> {todoList.map(todo => <li key={todo.id}>{todo.name}</li>)}</ul>
+      <ul>
+        {todoList.map(todo => (
+          <li key={todo.id} onClick={todoRemoveHandler.bind(this, todo.id)}>
+            {todo.name}
+          </li>
+        ))}
+      </ul>
     </React.Fragment>
   );
 };
