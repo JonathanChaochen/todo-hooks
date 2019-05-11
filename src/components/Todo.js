@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer, useRef } from 'react';
 import axios from 'axios';
 const Todo = () => {
-  const [todoName, setTodoName] = useState('');
-  const [submittedTodo, setSubmittedTodo] = useState(null);
+  // const [todoName, setTodoName] = useState('');
+  // const [submittedTodo, setSubmittedTodo] = useState(null);
   // const [todoList, setTodoList] = useState([]);
+  const todoInputRef = useRef(null);
+
   const todoListReducer = (state, action) => {
     switch (action.type) {
       case 'ADD':
@@ -50,21 +52,23 @@ const Todo = () => {
     };
   }, []);
 
-  useEffect(
-    () => {
-      if (submittedTodo) {
-        console.log('TCL: Todo -> submittedTodo', submittedTodo);
-        dispatch({ type: 'ADD', payload: submittedTodo });
-      }
-    },
-    [submittedTodo]
-  );
+  // useEffect(
+  //   () => {
+  //     if (submittedTodo) {
+  //       console.log('TCL: Todo -> submittedTodo', submittedTodo);
+  //       dispatch({ type: 'ADD', payload: submittedTodo });
+  //     }
+  //   },
+  //   [submittedTodo]
+  // );
 
-  const inpustChangeHandler = event => {
-    setTodoName(event.target.value);
-  };
+  // const inpustChangeHandler = event => {
+  //   setTodoName(event.target.value);
+  // };
 
   const todoAddHandler = () => {
+    const todoName = todoInputRef.current.value;
+
     axios
       .post('https://react-hooks-5e579.firebaseio.com/todos.json', {
         name: todoName
@@ -72,7 +76,7 @@ const Todo = () => {
       .then(res => {
         setTimeout(() => {
           const todoItem = { id: res.data.name, name: todoName };
-          setSubmittedTodo(todoItem);
+          dispatch({ type: 'ADD', payload: todoItem });
         }, 3000);
       })
       .catch(err => {
@@ -96,8 +100,9 @@ const Todo = () => {
       <input
         type="text"
         placeholder="Todo"
-        onChange={inpustChangeHandler}
-        value={todoName}
+        ref={todoInputRef}
+        // onChange={inpustChangeHandler}
+        // value={todoName}
       />
       <button type="button" onClick={todoAddHandler}>
         Add
